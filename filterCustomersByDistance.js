@@ -86,14 +86,14 @@ function getCustomersFromFile(fileLocation) {
  * Filter the customers to keep the ones that are within the distance from a location
  * @param customer Array of customer having a latitude and longitude
  * @param origin Location to base the distance from
- * @param distance The distance of the radius within the customer has to be
+ * @param distance The distance of the radius within the customer has to be (must be positive)
  * @return Array Return the customers within the radius from the origin
  */ 
 function getCustomersByProximity(customers, origin, radius) {
   // We don't do anything if there is an error in the input
   if (typeof customers === "undefined" || customers === null || customers.constructor !== Array) return null;
   if (typeof origin === "undefined" || origin === null || !origin.latitude || !origin.longitude) return null;
-  if (typeof radius === "undefined" || radius === null || radius.constructor !== Number || radius < 0) return null;
+  if (typeof radius === "undefined" || radius === null || radius.constructor !== Number || radius <= 0) return null;
 
   return customers.filter(customer => {
     return calcDistance(customer.latitude, customer.longitude, origin.latitude, origin.longitude) <= radius;
@@ -101,6 +101,26 @@ function getCustomersByProximity(customers, origin, radius) {
 }
 
 var customers = getCustomersFromFile('./customers.json');
-var customersWithin100Km = getCustomersByProximity(customers, DUBLIN_OFFICE, 100);
 
-console.log(customersWithin100Km);
+console.log("-- Test read customers file");
+console.log(customers.constructor === Array, "Is an array");
+console.log(customers.length == 32, "Correct number of customers");
+
+
+console.log("-- Test calc distance");
+console.log(calcDistance(DUBLIN_OFFICE.latitude, DUBLIN_OFFICE.longitude, 52.986375, -6.043701) == 41.676839095769566, "Correct distance");
+
+
+console.log("-- Test get customer in a radius");
+// Test with bad parameters
+console.log(getCustomersByProximity(customers, DUBLIN_OFFICE, 0) === null, "Error when radius = 0");
+console.log(getCustomersByProximity(customers, DUBLIN_OFFICE, -5) === null, "Error when radius is negative");
+console.log(getCustomersByProximity(null, DUBLIN_OFFICE, 10) === null, "Error when customers is null");
+console.log(getCustomersByProximity(customers, null, 10) === null, "Error when origin is null");
+console.log(getCustomersByProximity(customers, DUBLIN_OFFICE, null) === null, "Error when radius is null");
+console.log(getCustomersByProximity(undefined, DUBLIN_OFFICE, 10) === null, "Error when customers is undefined");
+console.log(getCustomersByProximity(customers, undefined, 10) === null, "Error when origin is undefined");
+console.log(getCustomersByProximity(customers, DUBLIN_OFFICE, undefined) === null, "Error when radius is undefined");
+
+var customersWithin100Km = getCustomersByProximity(customers, DUBLIN_OFFICE, 100);
+console.log(customersWithin100Km.length == 16, "Correct amount of customer filtered by distance");
